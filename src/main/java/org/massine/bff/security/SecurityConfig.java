@@ -25,7 +25,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(reg -> reg
                         .requestMatchers("/", "/index.html", "/favicon.ico", "/assets/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
-                        .requestMatchers("/oauth2/**", "/login/**", "/logout/**, public/**").permitAll()
+                        .requestMatchers("/oauth2/**", "/login/**", "/logout/**", "/public/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(o -> o.defaultSuccessUrl(spaUrl, true) )
