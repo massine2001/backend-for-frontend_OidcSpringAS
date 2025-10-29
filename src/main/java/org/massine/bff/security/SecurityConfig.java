@@ -35,8 +35,7 @@ public class SecurityConfig {
 
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/oauth2/**", "/login/**", "/logout/**").permitAll()
-                        .requestMatchers("/api/pool/stats/14").permitAll()
-                        .requestMatchers("/api/api/pool/stats/14").permitAll()
+                        .requestMatchers("/api/public/demopoolstat").permitAll()
 
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/api/public/invitations/**").permitAll()
