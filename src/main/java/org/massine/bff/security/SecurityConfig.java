@@ -1,12 +1,19 @@
 package org.massine.bff.security;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @Configuration
 public class SecurityConfig {
@@ -14,11 +21,12 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain filterChain(
             HttpSecurity http,
+            @Qualifier("corsConfigurationSource") CorsConfigurationSource cors,
             @Value("${bff.external-url}") String spaUrl
     ) throws Exception {
 
         http
-                .cors(c -> c.configurationSource(corsConfigurationSource()))
+                .cors(c -> c.configurationSource(cors))
                 .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**", "/actuator/**","/logout"))
                 .requestCache(rc -> rc.disable())
                 .authorizeHttpRequests(reg -> reg
@@ -45,7 +53,7 @@ public class SecurityConfig {
                     }
                     String qs = req.getQueryString();
                     String full = req.getRequestURL().toString() + (qs != null ? "?" + qs : "");
-                    String returnTo = java.net.URLEncoder.encode(full, java.nio.charset.StandardCharsets.UTF_8);
+                    String returnTo = URLEncoder.encode(full, StandardCharsets.UTF_8);
                     res.sendRedirect("/oauth2/authorization/spa?returnTo=" + returnTo);
                 }))
                 .oauth2Login(o -> o.successHandler((req, res, auth) -> {
@@ -60,15 +68,17 @@ public class SecurityConfig {
     }
 
     @Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        var c = new org.springframework.web.cors.CorsConfiguration();
-        c.setAllowedOrigins(java.util.List.of("http://localhost:5174"));
-        c.setAllowedMethods(java.util.List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS","HEAD"));
-        c.setAllowedHeaders(java.util.List.of("*"));
+    CorsConfigurationSource corsConfigurationSource(
+            @Value("${bff.external-url}") String spaUrl
+    ) {
+        var c = new CorsConfiguration();
+        c.setAllowedOrigins(List.of(spaUrl));
+        c.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS","HEAD"));
+        c.setAllowedHeaders(List.of("*"));
         c.setAllowCredentials(true);
-
-        var s = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
+        var s = new UrlBasedCorsConfigurationSource();
         s.registerCorsConfiguration("/**", c);
         return s;
     }
+
 }
